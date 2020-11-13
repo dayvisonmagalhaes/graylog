@@ -1,0 +1,66 @@
+Pré-requisitos
+Tomar uma configuração mínima do servidor como base precisará destes pacotes adicionais:
+$ sudo apt-get update && sudo apt-get upgrade
+$ sudo apt-get install apt-transport-https openjdk-8-jre-headless uuid-runtime pwgen
+ 
+Se você tiver um erro informando Não é possível localizar o pacote,você provavelmente precisará habilitar o repositório do universo que pode ser feito digitando o comando abaixo e comandos subsequentes da seguinte forma:
+$ sudo add-apt-repository universe
+$ sudo apt-get update && sudo apt-get upgrade
+$ sudo apt-get install apt-transport-https openjdk-8-jre-headless uuid-runtime pwgen
+ 
+Mongodb
+O repositório oficial do MongoDB fornece a versão mais atualizada e é a maneira recomendada de instalar o MongoDB 1:
+$ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+$ echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+$ sudo apt-get update
+$ sudo apt-get install -y mongodb-org
+
+
+O último passo é habilitar o MongoDB durante a inicialização do sistema operacional e verificar se ele está em execução.
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable mongod.service
+$ sudo systemctl restart mongod.service
+$ sudo systemctl --type=service --state=active | grep mongod
+
+Elasticsearch 
+O graylog pode ser usado com o Elasticsearch 6.x, siga as instruções abaixo para instalar a versão de código aberto do Elasticsearch.
+$ wget -q https://artifacts.elastic.co/GPG-KEY-elasticsearch -O myKey
+$ sudo apt-key add myKey
+$ echo "deb https://artifacts.elastic.co/packages/oss-6.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-6.x.list
+$ sudo apt-get update && sudo apt-get install elasticsearch-oss
+
+
+Modifique o arquivo de configuração elasticsearch () e defina o nome do cluster para e não cotar para habilitar a ação:
+
+
+$ sudo tee -a /etc/elasticsearch/elasticsearch.yml > /dev/null <<EOT
+cluster.name: graylog
+action.auto_create_index: false
+EOT
+
+
+Depois de modificar a configuração, você pode iniciar o Elasticsearch e verificar se ela está em execução.
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable elasticsearch.service
+$ sudo systemctl restart elasticsearch.service
+$ sudo systemctl --type=service --state=active | grep elasticsearch
+
+
+Graylog
+Agora instale a configuração do repositório Graylog e o próprio Graylog com os seguintes comandos:
+$ wget https://packages.graylog2.org/repo/packages/graylog-3.3-repository_latest.deb
+$ sudo dpkg -i graylog-3.3-repository_latest.deb
+$ sudo apt-get update && sudo apt-get install graylog-server graylog-enterprise-plugins graylog-integrations-plugins graylog-enterprise-integrations-plugins
+
+Editar o arquivo de configuração
+Leia as instruções no arquivo de configurações e edite conforme necessário, localizado em . Adicionalmente adicione e como estes são obrigatórios e Graylog não começará sem eles./etc/graylog/server/server.confpassword_secretroot_password_sha2
+Para criar o seguinte comando:root_password_sha2
+$ echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
+
+
+O último passo é habilitar o Graylog durante a inicialização do sistema operacional e verificar se ele está em execução.
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable graylog-server.service
+$ sudo systemctl start graylog-server.service
+$ sudo systemctl --type=service --state=active | grep graylog
